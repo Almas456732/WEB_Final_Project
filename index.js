@@ -43,17 +43,17 @@ connectDB();
 
 //nodemailer
 const transporter = nodemailer.createTransport({
-  service: 'gmail',  // Используем сервис Gmail
+  service: 'gmail',  
   host: 'smtp.gmail.com',
   port: 587,
   secure: false,
   auth: {
-    user: 'almasplay02@gmail.com', // Ваш Gmail адрес
-    pass: 'xnlv nsbv tizh riaa'    // Ваш пароль приложения Gmail
+    user: 'almasplay02@gmail.com',
+    pass: 'xnlv nsbv tizh riaa'   
   }
 });
 
-// Проверка соединения
+
 transporter.verify(function(error, success) {
   if (error) {
     console.log('Error with email server:', error);
@@ -159,7 +159,7 @@ app.post("/register", async (req, res) => {
     );
   }
 });
-// Логин
+
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
@@ -195,7 +195,7 @@ app.post("/login", async (req, res) => {
         );
     }
 
-    // Генерация JWT токена
+
     const token = jwt.sign({ username: user.username }, JWT_SECRET, {
       expiresIn: "1h",
     });
@@ -234,19 +234,17 @@ function requireAuth(req, res, next) {
     return res.redirect('/login');
   }
 }
-// Применяем middleware
+
 app.get("/main", requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "main.html"));
 });
 
-// Защитим все API endpoints
 app.use('/api/*', requireAuth);
 app.use('/weather', requireAuth);
 app.use('/blogs*', requireAuth);
 app.use('/generate-qr', requireAuth);
 app.use('/calculate-bmi', requireAuth);
 
-// Защитим все HTML страницы, кроме login и register
 app.use((req, res, next) => {
   const publicPaths = ['/login', '/register', '/'];
   if (!publicPaths.includes(req.path) && req.path.endsWith('.html')) {
@@ -256,7 +254,7 @@ app.use((req, res, next) => {
   }
 });
 
-// Обновим маршрут logout
+
 app.get("/logout", (req, res) => {
   res.clearCookie('token', { 
     httpOnly: true,
@@ -266,7 +264,6 @@ app.get("/logout", (req, res) => {
   res.redirect('/login');
 });
 
-// Обновим маршруты для HTML файлов
 app.get("/API.html", requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "API.html"));
 });
@@ -283,7 +280,6 @@ app.get("/BMI.html", requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "BMI.html"));
 });
 
-// Обновим маршруты API с защитой
 app.post("/generate-qr", requireAuth, (req, res) => {
   const url = req.body.url;
   const qrCode = qr.imageSync(url, { type: "png" });
