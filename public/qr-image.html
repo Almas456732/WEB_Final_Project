@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Generate QR Code</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Open+Sans:wdth@75..100&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Updock&display=swap");
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: "Open Sans", sans-serif;
+        font-optical-sizing: auto;
+        font-weight: 400;
+        font-style: normal;
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        background-size: cover; /* Покрытие всей области */
+        background-repeat: no-repeat;
+        height: 100vh;
+      }
+
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6,
+      p {
+        margin: 0;
+        padding: 0;
+      }
+      a {
+        font-size: 17px;
+      }
+
+      /* header */
+      header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 1000;
+        background-color: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        height: 90px;
+      }
+
+      header .rap {
+        padding: 5px 15% 0;
+      }
+
+      .inner-rap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .first-part {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .inner-rap ul {
+        display: flex;
+        justify-content: end;
+        align-items: center;
+        padding: 0;
+        width: 1200px;
+      }
+
+      .inner-rap ul li {
+        list-style-type: none;
+        margin-right: 20px;
+      }
+
+      .inner-rap ul li button {
+        background-color: white;
+        color: black;
+        border: none;
+        text-align: center;
+        text-decoration: none;
+        font-size: 16px;
+        cursor: pointer;
+        margin-right: 30px;
+      }
+
+      .inner-rap ul li button:focus {
+        outline: none;
+      }
+
+      li {
+        list-style-type: none;
+        margin-bottom: 10px;
+      }
+
+      .inner-rap a {
+        text-decoration: none;
+        color: black;
+      }
+
+      .first {
+        font-weight: 600;
+        font-size: 30px;
+        letter-spacing: 2px;
+        color: #fff;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      main {
+        margin-top: 10%;
+      }
+
+      .qr-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      button {
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+      }
+      button:hover {
+        background-color: #45a049;
+      }
+      img {
+        margin-top: 20px;
+        width: 200px;
+        height: 200px;
+      }
+      .container {
+        background: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        max-width: 400px;
+        width: 100%;
+      }
+      h1 {
+        text-align: center;
+        color: #333;
+      }
+      form {
+        display: flex;
+        flex-direction: column;
+      }
+      label {
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+      input[type="text"] {
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+      button {
+        background: #007bff;
+        color: #fff;
+        border: none;
+        padding: 10px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      .error {
+        color: red;
+        font-size: 14px;
+        margin-bottom: 10px;
+        text-align: center;
+      }
+
+      .inner-rap ul li a {
+        color: #fff;
+        padding: 8px 16px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+      }
+
+      .inner-rap ul li a:hover {
+        background: rgba(255, 255, 255, 0.1);
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      #logout-btn {
+        background: #ff4757;
+        color: #fff;
+        padding: 8px 16px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+      }
+
+      #logout-btn:hover {
+        background: #ff6b81;
+      }
+    </style>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const logoutBtn = document.getElementById("logout-btn");
+
+        logoutBtn.addEventListener("click", async (e) => {
+          e.preventDefault();
+          try {
+            await fetch('/logout', {
+              method: 'GET',
+              credentials: 'same-origin'
+            });
+            window.location.href = '/login';
+          } catch (error) {
+            console.error('Logout error:', error);
+            window.location.href = '/login';
+          }
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <header>
+      <div class="rap">
+        <div class="inner-rap">
+          <div class="first-part">
+            <a href="/API.html" class="first">WEB Project</a>
+          </div>
+          <div class="second-part">
+            <ul>
+              <li>
+                <a href="/API.html">API</a>
+              </li>
+              <li>
+                <a href="/qr-image.html">QR-img</a>
+              </li>
+              <li>
+                <a href="/BMI.html">BMI</a>
+              </li>
+              <li>
+                <a href="/CRUD.html">CRUD</a>
+              </li>
+              <li>
+                <a href="/Nodemailer.html">Email</a>
+              </li>
+              <li>
+                <a id="logout-btn">Logout</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <div class="container">
+        <h1>QR Code Generator</h1>
+        <form id="qrForm">
+          <div class="error" id="error-message"></div>
+          <label for="url">Enter URL:</label>
+          <input
+            type="text"
+            id="url"
+            name="url"
+            placeholder="Enter your url"
+            required
+          />
+          <button type="submit">Generate QR Code</button>
+        </form>
+      </div>
+
+      <div class="qr-container">
+        <!-- Здесь будет отображаться QR код -->
+        <img id="qrCodeImage" src="" alt="QR Code" style="display: none" />
+      </div>
+    </main>
+
+    <script>
+      document
+        .getElementById("qrForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const url = document.getElementById("url").value;
+
+          const response = await fetch("/generate-qr", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: `url=${encodeURIComponent(url)}`,
+          });
+
+          if (response.ok) {
+            const blob = await response.blob();
+            const imageUrl = URL.createObjectURL(blob);
+            const qrCodeImage = document.getElementById("qrCodeImage");
+            qrCodeImage.src = imageUrl;
+            qrCodeImage.style.display = "block";
+          } else {
+            alert("Error generating QR code");
+          }
+        });
+    </script>
+  </body>
+</html>
