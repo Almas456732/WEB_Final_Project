@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require("express");
 const path = require("path");
 const bcrypt = require("bcrypt");
@@ -13,19 +15,18 @@ var qr = require("qr-image");
 const dns = require('dns');
 
 const app = express();
-const PORT = 3000;
-const JWT_SECRET =
-  "8e3dbaafa6aeb3dd4bc4ed5fe6af6608267793799f171fada5b7a56ff44d3aa6";
+const PORT = process.env.PORT || 3000;
+const JWT_SECRET = process.env.JWT_SECRET;
 
 const pool = new Pool({
-  user: "postgres",
-  host: "localhost",
-  database: "web_project",
-  password: "admin123",
-  port: 5432,
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASSWORD,
+  port: process.env.DB_PORT
 });
 
-const uri = "mongodb://127.0.0.1:27017";
+const uri = process.env.MONGODB_URI;
 const client = new MongoClient(uri);
 let db;
 
@@ -33,7 +34,7 @@ async function connectDB() {
   try {
     await client.connect();
     console.log("Connected to MongoDB");
-    db = client.db("blods");
+    db = client.db(process.env.MONGODB_DB_NAME);
     app.locals.db = db;
   } catch (error) {
     console.error("Error connecting to MongoDB:", error);
@@ -41,18 +42,16 @@ async function connectDB() {
 }
 connectDB();
 
-//nodemailer
 const transporter = nodemailer.createTransport({
-  service: 'gmail',  
-  host: 'smtp.gmail.com',
-  port: 587,
+  service: process.env.EMAIL_SERVICE,
+  host: process.env.EMAIL_HOST,
+  port: process.env.EMAIL_PORT,
   secure: false,
   auth: {
-    user: 'almasplay02@gmail.com',
-    pass: 'xnlv nsbv tizh riaa'   
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
   }
 });
-
 
 transporter.verify(function(error, success) {
   if (error) {
@@ -62,13 +61,11 @@ transporter.verify(function(error, success) {
   }
 });
 
-// Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(path.resolve(__dirname, "public")));
 
-// Routes
 app.get("/", (req, res) => {
   const token = req.cookies.token;
   if (token) {
@@ -211,7 +208,7 @@ app.post("/login", async (req, res) => {
       );
   }
 });
-// Обновим middleware для проверки авторизации
+
 function requireAuth(req, res, next) {
   const token = req.cookies.token;
   
@@ -308,7 +305,7 @@ app.post("/calculate-bmi", requireAuth, (req, res) => {
 });
 
 const getWeather = async (city) => {
-  const apiKey = "7639ee896623e646c38a76973cfaa9c9";
+  const apiKey = process.env.WEATHER_API_KEY;
   const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(
     city
   )}&appid=${apiKey}&units=metric`;
@@ -338,7 +335,7 @@ const getWeather = async (city) => {
 const getNews = async (city) => {
   await new Promise(resolve => setTimeout(resolve, 1000));
   
-  const apiKey = "72a10662d48d48cb8baa51250ee2decc";
+  const apiKey = process.env.NEWS_API_KEY;
   const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(
     city
   )}&apiKey=${apiKey}`;
@@ -367,7 +364,7 @@ const getNews = async (city) => {
 };
 
 const getTimeZone = async (lat, lon) => {
-  const apiKey = "Q7DPAOH6TZXU";
+  const apiKey = process.env.TIMEZONE_API_KEY;
   const url = `https://api.timezonedb.com/v2.1/get-time-zone?key=${apiKey}&format=json&by=position&lat=${lat}&lng=${lon}`;
 
   const axiosConfig = {
@@ -395,7 +392,7 @@ const getTimeZone = async (lat, lon) => {
 };
 
 const getAirQuality = async (lat, lon) => {
-  const apiKey = "7639ee896623e646c38a76973cfaa9c9";
+  const apiKey = process.env.WEATHER_API_KEY;
   const url = `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${apiKey}`;
 
   const axiosConfig = {
@@ -482,7 +479,7 @@ app.get("/weather", requireAuth, async (req, res) => {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weather in ${city}</title>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAwv2xrWrX_Me6ykNBmwbtxLxp_LI0goTc&callback=initMap" async defer></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=${process.env.GOOGLE_MAPS_API_KEY}&callback=initMap" async defer></script>
     <style>
         /* Global Styles */
         body {
@@ -751,9 +748,8 @@ app.get("/weather", requireAuth, async (req, res) => {
   }
 });
 
-// Защитим CRUD операции
 app.post("/blogs", requireAuth, async (req, res) => {
-  const db = req.app.locals.db; // Берем db из app.locals
+  const db = req.app.locals.db;
   const { title, body, author } = req.body;
   if (!title || !body)
     return res.status(400).json({ error: "Title and body are required" });
@@ -806,31 +802,26 @@ app.delete("/blogs/:id", requireAuth, async (req, res) => {
   res.status(200).json({ message: "Blog deleted" });
 });
 
-// Добавьте этот маршрут после других маршрутов
 app.post("/send-email", requireAuth, async (req, res) => {
   const { to, subject, message } = req.body;
 
-  // Валидация входных данных
   if (!to || !subject || !message) {
     return res.status(400).json({ error: 'All fields are required' });
   }
 
-  // Проверка формата email
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(to)) {
     return res.status(400).json({ error: 'Invalid email address' });
   }
 
   try {
-    // Настройка письма
     const mailOptions = {
-      from: 'almasplay02@gmail.com', // Ваш email
+      from: process.env.EMAIL_USER,
       to: to,
       subject: subject,
       text: message,
     };
 
-    // Отправка письма
     await transporter.sendMail(mailOptions);
     
     res.status(200).json({ message: 'Email sent successfully' });
@@ -840,17 +831,14 @@ app.post("/send-email", requireAuth, async (req, res) => {
   }
 });
 
-// Добавьте этот маршрут после других маршрутов
 app.get("/Nodemailer.html", requireAuth, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "Nodemailer.html"));
 });
 
-// Запуск сервера
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
 
-// Обновим обработку ошибок
 app.use((err, req, res, next) => {
   console.error(err.stack);
   if (req.xhr || req.headers.accept.indexOf('json') > -1) {
@@ -859,4 +847,4 @@ app.use((err, req, res, next) => {
   res.status(500).send('Something went wrong!');
 });
 
-dns.setServers(['1.1.1.1', '1.0.0.1']); // Cloudflare DNS servers
+dns.setServers(['1.1.1.1', '1.0.0.1']);
